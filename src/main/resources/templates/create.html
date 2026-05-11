@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title th:text="|入力画面 - Pikan（type=${form.type}）|">入力画面 - Pikan</title>
+</head>
+<body>
+  <main>
+    <!--
+    table:「ここから表を作るよ」という合図
+    width:　画面いっぱいに広げてという意味
+    tr: 「行（横の一列）」のこと。
+    td: 「列（マス目）」のこと。
+    small：　少し小さめに表示してくれる
+    -->
+    <!--
+    '文字' + ${変数}を省略して書くことができる
+    | | で囲むと、その中の文字と ${ } を勝手に合体させてくれる
+    -->
+    <table width="100%" border="0">
+      <tr>
+        <td>
+          <h1>Pikan</h1>
+        </td>
+        <td align="right">
+          <small th:text="|現在の type: ${form.type}|">現在の type: TYPE</small>
+        </td>
+      </tr>
+    </table>
+
+    <h2 th:text="|入力画面（${form.type}）|">入力画面</h2>
+
+    <!--
+    divとそんなに変わらないけど、死きりとしてsectionが入っています。
+    sevtionを使う時には下に見出しを作るのが基本らしい。-->
+    <!--Formクラスのものと連動させるために*{●●}と書いている。-->
+    <!--
+    #fields: 「入力フォームのチェック結果」が入っている特別なフォルダ。
+    .hasErrors('content'): 「content（本文）という項目に、何かエラー（未入力など）はありますか？」という意味
+    -->
+    <section>
+      <h3>内容を入力</h3>
+      <form th:action="@{/save}" th:object="${form}" method="post">
+        <input type="hidden" th:field="*{type}" />
+        <div>
+          <textarea th:field="*{content}" rows="6" cols="60" placeholder="ここに入力してください"></textarea>
+          <div th:if="${#fields.hasErrors('content')}">
+            <small th:errors="*{content}">content error</small>
+          </div>
+        </div>
+        <div>
+          <button type="submit">送信</button>
+        </div>
+      </form>
+    </section>
+
+    <div>
+      <a th:href="@{/}">ホームに戻る</a>
+    </div>
+  </main>
+</body>
+</html>
+
