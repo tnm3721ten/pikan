@@ -9,11 +9,13 @@
   <main>
     <h1>Pikan</h1>
 
+    <p th:if="${successMessage != null}" th:text="${successMessage}">成功メッセージ</p>
+
     <!--<section>はセクションを作成するためのタグ。
       <h2>はタイトルを作成するためのタグ。
       <div>はテキストを作成するためのタグ。
       <a>はリンクを作成するためのタグ。th:href="@{/post/5w1h}"は、/post/5w1hというURLにリンクを作成する。-->
-      <!--はてなを投稿するフォーム-->
+    <!--はてなを投稿するフォーム-->
     <section>
       <h2>はてなを投稿</h2>
       <div>
@@ -24,10 +26,7 @@
 
       <!--URLの後ろにデータをくっつけるときには（）を書く。-->
       <!--@{・・・}は後ろの（）を自動で？と＆を使った形にしてくれる。追加情報は？で追加される。/create?type=NORMAL-->
-      <!--${T(完全修飾クラス名).定数}
-          ${ } (変数式):Java側のデータにアクセスするための記号
-          T( ) (型指定):「ただの文字列」ではなく、Javaの特定のクラス（Type）そのものを指したいときに使う
-          型指定をしておくと、enumの中から指定の文字を取り出して使うことができる。-->
+      <!-- enum の定数は T(完全修飾クラス名).定数名 で指定する（例: HatenaType.NORMAL） -->
       <div>
         <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).NORMAL})}">
           通常入力
@@ -42,13 +41,16 @@
     th:styleはCSSを直接書くためのもの。-->
     <!--
     最初はｑにもtypeにもパラメータが飛んでこないので、nullになる。
-    →　最初の画面は、全ての質問を表示する。
+    →　最初の画面は、全てのはてなを表示する。
+
+    変数式: Java側のデータにアクセスする（Thymeleaf の変数式）
+    型指定 T(...): Javaの特定のクラス（enum など）を指す
 
     @{・・・}の後ろの（）は、URLの後ろにデータをくっつけるためのもの。
     条件が合致していれば、値を後ろにつけることができる。最初の区切りが？でその後は＆で連結されるはずだが、それを自動でしてくれる。
-    -->
+    ？はパラメータの始まり。＆はくっつけるときに使う。-->
     <section>
-      <h2>質問一覧</h2>
+      <h2>はてな一覧</h2>
       <nav aria-label="status tabs">
         <a th:href="@{/(status=${T(com.example.pikan.enumtype.HatenaStatus).OPEN},q=${q},type=${currentType})}"
            th:style="${currentStatus == T(com.example.pikan.enumtype.HatenaStatus).OPEN} ? 'font-weight:bold;text-decoration:underline;' : ''">
@@ -64,8 +66,7 @@
       <!--
       <select name="type">type ：typeという名前でコントローラーに送られる。valueは、選択された値が送られる。
       <option value="...">　：これが実際に送られる中身。
-      th:selected=　：HTML上で～の時ってこと。
-      -->
+      th:selected=　：HTML上で～の時ってこと。-->
       <form th:action="@{/}" method="get">
         <input type="hidden" name="status" th:value="${currentStatus}" />
         <div>
@@ -96,14 +97,20 @@
       HTMLでは「リストの箱（ul/ol）」の中に「項目（li）」を入れる、という決まり（構造）がある-->
       <!--
       strong：文中で重要な部分を表すタグ（見た目は太字になりやすい）
-      span：特定の部分だけ囲って、後でCSSや表示差し替えをしやすくするための小さな箱
-      -->
+      span：特定の部分だけ囲って、後でCSSや表示差し替えをしやすくするための小さな箱-->
+      <!--
+      #strings.abbreviate(hatena.content, 50)は、hatena.contentの文字列を50文字に短縮して表示する。
+      abbreviate(文字列, 最大長) : 長いと省略（…）して短くする関数-->
       <ul th:if="${hatenaList != null && !#lists.isEmpty(hatenaList)}">
         <li th:each="hatena : ${hatenaList}">
           <a th:href="@{/detail/{id}(id=${hatena.id})}">
             <strong th:text="${hatena.type}">TYPE</strong>
             <span>:</span>
             <span th:text="${#strings.abbreviate(hatena.content, 50)}">CONTENT</span>
+            <span> / </span>
+            <span th:text="${hatena.createdAt}">createdAt</span>
+            <span> / </span>
+            <span th:text="${hatena.status == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED ? '解決済み' : '未解決'}">status</span>
           </a>
         </li>
       </ul>

@@ -32,14 +32,26 @@ public class HatenaService {
 		return hatenaRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
 	}
 
-	//　解決済みかのステータスによって絞り込むメソッド
+
+	/*　解決済みかのステータスによって絞り込むメソッド(使わなくなったのでコメントアウト)
+	　　もともと、未解決か解決済みかだけで絞り込んでいたが、typeとqを追加した。
 	public List<Hatena> findByStatus(HatenaStatus status) {
 		return hatenaRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
 	}
+	*/
 
+	//はてなの検索メソッド。
+	/*Sort.by(...) :「Sortクラスの “by” という静的メソッドで Sort を生成する（new Sort(...) を直接しないための作り方メソッドだと思ってOK）」
+	  Sort.Direction.DESC: 降順（新しい順）という指示。
+	  createdAt: HatenaクラスのcreatedAtフィールドを並び替えるための指示。*/
+	//リポジトリーでエラーが起きた関係で、qに入ってる時と入ってない時で、メソッドが変わるようになっている。
 	public List<Hatena> findForHome(HatenaStatus status, HatenaType type, String query) {
 		Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-		return hatenaRepository.findForHome(status, type, query, sort);
+		String effectiveQuery = (query == null || query.isBlank()) ? null : query.trim();
+		if (effectiveQuery == null) {
+			return hatenaRepository.findForHomeWithoutQuery(status, type, sort);
+		}
+		return hatenaRepository.findForHomeWithQuery(status, type, effectiveQuery, sort);
 	}
 
 

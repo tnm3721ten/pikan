@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.pikan.entity.Hatena;
 import com.example.pikan.enumtype.HatenaStatus;
@@ -34,6 +35,7 @@ public class HatenaController {
 	// Modelのオブジェクトは引数に入れた時点で自動で作られる。
 	// Modelはフロントエンドにデータを渡す・もらうためのオブジェクト。データを渡すときは addAttribute、もらうときは getAttribute。
 	// statusがnullかどうかのチェックは、/をベタ打ちしたときにデフォルトの画面を表示するために必要。nullはDBにあるはずがないので、参照しても何も出てこない。
+	// typeはOpenかResolvedかしかないので/にすると、なにもないときで検索してしまう。
 	@GetMapping("/")
 	public String index(
 			@RequestParam(name = "status", required = false) HatenaStatus status,
@@ -42,6 +44,8 @@ public class HatenaController {
 			Model model) {
 		HatenaStatus effectiveStatus = (status == null) ? HatenaStatus.OPEN : status;
 
+		//isBlankは前後の空白を消してから、中身が空なのかチェックしてくれる。
+		//enumクラスのvalueOfメソッドを使うと、文字列をenum型に変換してくれる。
 		HatenaType effectiveType = null;
 		if (type != null && !type.isBlank()) {
 			try {
@@ -83,12 +87,17 @@ public class HatenaController {
 	//                      つまり、エラーの一覧を取得するために必要ということ。
 	// bindingResult.hasErrors(): 検査の結果、一つでもダメな項目があれば true になる
 	@PostMapping("/save")
-	public String save(@Valid HatenaCreateForm form, BindingResult bindingResult, Model model) {
+	public String save(
+			@Valid HatenaCreateForm form,
+			BindingResult bindingResult,
+			Model model,
+			RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
 			model.addAttribute("form", form);
 			return "create";
 		}
 		hatenaService.saveNew(form.getType(), form.getContent());
+		redirectAttributes.addFlashAttribute("successMessage", "はてなを保存しました。");
 		return "redirect:/";
 	}
 
@@ -111,7 +120,11 @@ public class HatenaController {
 	  bindingResult: @Valid で検証した結果（どの項目がどんな理由でNGか）を持っているオブジェクト→必ず、Modelnに追加されて勝手にわたる。なので、書かなくてよい。
 	*/
 	@PostMapping("/update")
-	public String update(@Valid HatenaUpdateForm form, BindingResult bindingResult, Model model) {
+	public String update(
+			@Valid HatenaUpdateForm form,
+			BindingResult bindingResult,
+			Model model,
+			RedirectAttributes redirectAttributes) {
 		Hatena hatena = hatenaService.findById(form.getId());
 
 		if (bindingResult.hasErrors()) {
@@ -120,15 +133,18 @@ public class HatenaController {
 			return "detail";
 		}
 
+		//addFlashAttribute: そのあとに来る 1 回限りの GET にだけデータを載せるオプション。
 		hatenaService.update(form);
-		return "redirect:/detail/" + form.getId();
+		redirectAttributes.addFlashAttribute("successMessage", "はてなを更新しました。");
+		return "redirect:/";
 	}
 
 
 	//@RequestParam("id") Long id: hiddenで送られてきたものを引数の数字に入れている。
 	@PostMapping("/delete")
-	public String delete(@RequestParam("id") Long id) {
+	public String delete(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
 		hatenaService.delete(id);
+		redirectAttributes.addFlashAttribute("successMessage", "はてなを削除しました。");
 		return "redirect:/";
 	}
 }
