@@ -4,113 +4,120 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pikan</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
 </head>
 <body>
   <main>
-    <h1>Pikan</h1>
+    <h1 class="app-logo">
+      <a class="app-logo__link" th:href="@{/}">
+        <span class="app-logo__icon" aria-hidden="true">💡</span>
+        <span class="app-logo__text">Pikan</span>
+      </a>
+    </h1>
 
-    <p th:if="${successMessage != null}" th:text="${successMessage}">成功メッセージ</p>
+    <div class="user-bar">
+      <p class="user-bar__name">
+        ログイン中: <span th:text="${currentUsername}">username</span>
+      </p>
+      <form class="user-bar__logout" th:action="@{/logout}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <button class="btn" type="submit">ログアウト</button>
+      </form>
+    </div>
 
-    <!--<section>はセクションを作成するためのタグ。
-      <h2>はタイトルを作成するためのタグ。
-      <div>はテキストを作成するためのタグ。
-      <a>はリンクを作成するためのタグ。th:href="@{/post/5w1h}"は、/post/5w1hというURLにリンクを作成する。-->
-    <!--はてなを投稿するフォーム-->
-    <section>
+    <p class="success-message" th:if="${successMessage != null}" th:text="${successMessage}">成功メッセージ</p>
+    <p class="error-message" th:if="${errorMessage != null}" th:text="${errorMessage}">失敗メッセージ</p>
+
+
+    <section class="post-section">
       <h2>はてなを投稿</h2>
-      <div>
-        <a th:href="@{/select-type}">
-          5W1H入力
-        </a>
-      </div>
-
-      <!--URLの後ろにデータをくっつけるときには（）を書く。-->
-      <!--@{・・・}は後ろの（）を自動で？と＆を使った形にしてくれる。追加情報は？で追加される。/create?type=NORMAL-->
-      <!-- enum の定数は T(完全修飾クラス名).定数名 で指定する（例: HatenaType.NORMAL） -->
-      <div>
-        <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).NORMAL})}">
+      <div class="post-actions">
+        <a class="post-action post-action--primary"
+           th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).NORMAL})}">
           通常入力
+        </a>
+        <a class="post-action" th:href="@{/select-type}">
+          5W1H入力
         </a>
       </div>
     </section>
 
     <hr />
 
-    <!--質問一覧を表示するセクション-->
-    <!--
-    th:styleはCSSを直接書くためのもの。-->
-    <!--
-    最初はｑにもtypeにもパラメータが飛んでこないので、nullになる。
-    →　最初の画面は、全てのはてなを表示する。
 
-    変数式: Java側のデータにアクセスする（Thymeleaf の変数式）
-    型指定 T(...): Javaの特定のクラス（enum など）を指す
-
-    @{・・・}の後ろの（）は、URLの後ろにデータをくっつけるためのもの。
-    条件が合致していれば、値を後ろにつけることができる。最初の区切りが？でその後は＆で連結されるはずだが、それを自動でしてくれる。
-    ？はパラメータの始まり。＆はくっつけるときに使う。-->
     <section>
       <h2>はてな一覧</h2>
-      <nav aria-label="status tabs">
-        <a th:href="@{/(status=${T(com.example.pikan.enumtype.HatenaStatus).OPEN},q=${q},type=${currentType})}"
-           th:style="${currentStatus == T(com.example.pikan.enumtype.HatenaStatus).OPEN} ? 'font-weight:bold;text-decoration:underline;' : ''">
+      <nav class="tabs" aria-label="status tabs">
+        <!--タブ切り替え時も検索条件q/typeをURLに保持する-->
+        <a class="tab"
+           th:classappend="${currentStatus == T(com.example.pikan.enumtype.HatenaStatus).OPEN} ? ' is-active' : ''"
+           th:href="@{/(status=${T(com.example.pikan.enumtype.HatenaStatus).OPEN},q=${q},type=${currentType})}">
           未解決
         </a>
-        <span> / </span>
-        <a th:href="@{/(status=${T(com.example.pikan.enumtype.HatenaStatus).RESOLVED},q=${q},type=${currentType})}"
-           th:style="${currentStatus == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED} ? 'font-weight:bold;text-decoration:underline;' : ''">
+        <a class="tab"
+           th:classappend="${currentStatus == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED} ? ' is-active' : ''"
+           th:href="@{/(status=${T(com.example.pikan.enumtype.HatenaStatus).RESOLVED},q=${q},type=${currentType})}">
           解決済み
         </a>
       </nav>
 
-      <!--
-      <select name="type">type ：typeという名前でコントローラーに送られる。valueは、選択された値が送られる。
-      <option value="...">　：これが実際に送られる中身。
-      th:selected=　：HTML上で～の時ってこと。-->
-      <form th:action="@{/}" method="get">
+
+      <!--statusはhiddenで保持し、type/qだけGETパラメータとして送る-->
+      <form class="search-form" th:action="@{/}" method="get">
         <input type="hidden" name="status" th:value="${currentStatus}" />
-        <div>
-          <label>type</label>
-          <select name="type">
+        <div class="search-form__row">
+          <div class="search-form__field">
+            <label class="search-form__label" for="searchType">type</label>
+            <select id="searchType" name="type" class="search-form__select">
             <option value="" th:selected="${currentType == null}">全て</option>
             <option
               th:each="t : ${T(com.example.pikan.enumtype.HatenaType).values()}"
               th:value="${t}"
               th:text="${t}"
               th:selected="${currentType == t}"
-            >WHY</option>
-          </select>
-        </div>
+            ></option>
+            </select>
+          </div>
 
-        <input type="text" name="q" placeholder="content / answer で検索" th:value="${q}" />
-        <button type="submit">検索</button>
-        <a th:href="@{/(status=${currentStatus})}">クリア</a>
+          <div class="search-form__field search-form__field--grow">
+            <label class="search-form__label" for="searchQuery">キーワード</label>
+            <input
+              id="searchQuery"
+              class="search-form__input"
+              type="search" 
+              name="q"
+              placeholder="content / answer で検索"
+              th:value="${q}"
+            />
+          </div>
+
+          <div class="search-form__actions">
+            <button class="search-form__submit" type="submit">検索</button>
+            <a class="search-form__clear" th:href="@{/(status=${currentStatus})}">クリア</a>
+          </div>
+        </div>
       </form>
+
 
       <div th:if="${hatenaList == null || #lists.isEmpty(hatenaList)}">
         <p>該当するはてながありません</p>
       </div>
 
-      <!--
-      ulは中にあるリストを表示する。
-      strongは強調して表示するためのもの
-      HTMLでは「リストの箱（ul/ol）」の中に「項目（li）」を入れる、という決まり（構造）がある-->
-      <!--
-      strong：文中で重要な部分を表すタグ（見た目は太字になりやすい）
-      span：特定の部分だけ囲って、後でCSSや表示差し替えをしやすくするための小さな箱-->
-      <!--
-      #strings.abbreviate(hatena.content, 50)は、hatena.contentの文字列を50文字に短縮して表示する。
-      abbreviate(文字列, 最大長) : 長いと省略（…）して短くする関数-->
-      <ul th:if="${hatenaList != null && !#lists.isEmpty(hatenaList)}">
-        <li th:each="hatena : ${hatenaList}">
-          <a th:href="@{/detail/{id}(id=${hatena.id})}">
-            <strong th:text="${hatena.type}">TYPE</strong>
-            <span>:</span>
-            <span th:text="${#strings.abbreviate(hatena.content, 50)}">CONTENT</span>
-            <span> / </span>
-            <span th:text="${hatena.createdAt}">createdAt</span>
-            <span> / </span>
-            <span th:text="${hatena.status == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED ? '解決済み' : '未解決'}">status</span>
+
+      <ul class="hatena-list" th:if="${hatenaList != null && !#lists.isEmpty(hatenaList)}">
+        <li class="hatena-item" th:each="hatena : ${hatenaList}">
+          <a class="hatena-item__link" th:href="@{/detail/{id}(id=${hatena.id})}">
+            <span class="hatena-type"
+                  th:classappend="|hatena-type--${hatena.type.name()}|"
+                  th:text="${hatena.type}">TYPE</span>
+            <span class="hatena-content" th:text="${#strings.abbreviate(hatena.content, 50)}">CONTENT</span>
+            <span class="hatena-meta">
+              <span th:text="${T(com.example.pikan.util.DateTimeFormats).format(hatena.createdAt)}">createdAt</span>
+              <span> / </span>
+              <span class="hatena-status"
+                    th:classappend="${hatena.status == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED} ? ' hatena-status--resolved' : ' hatena-status--open'"
+                    th:text="${hatena.status == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED ? '解決済み' : '未解決'}">status</span>
+            </span>
           </a>
         </li>
       </ul>

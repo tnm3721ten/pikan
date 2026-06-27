@@ -2,10 +2,13 @@ package com.example.pikan.controller;
 
 import java.util.List;
 
-import org.springframework.validation.BindingResult;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +26,24 @@ import jakarta.validation.Valid;
 @Controller
 public class HatenaController {
 
+	private static final String NOT_FOUND_MESSAGE = "指定されたはてなが見つかりません。";
+
+	private static final String INVALID_TYPE_MESSAGE = "種類（type）が指定されていないか、不正です。";
+
+	private static final String INVALID_ID_MESSAGE = "指定されたIDが不正です。";
+
+	private static final String SAVE_SUCCESS_MESSAGE = "はてなを保存しました。";
+
+	private static final String SAVE_FAILED_MESSAGE = "はてなの保存に失敗しました。";
+
+	private static final String UPDATE_SUCCESS_MESSAGE = "はてなを更新しました。";
+
+	private static final String UPDATE_FAILED_MESSAGE = "はてなの更新に失敗しました。";
+
+	private static final String DELETE_SUCCESS_MESSAGE = "はてなを削除しました。";
+
+	private static final String DELETE_FAILED_MESSAGE = "はてなの削除に失敗しました。";
+
 	// 守るために１工程追加
 	private final HatenaService hatenaService;
 
@@ -31,21 +52,27 @@ public class HatenaController {
 		this.hatenaService = hatenaService;
 	}
 
-	// 引数を見て自動判断してくれている。
-	// Modelのオブジェクトは引数に入れた時点で自動で作られる。
-	// Modelはフロントエンドにデータを渡す・もらうためのオブジェクト。データを渡すときは addAttribute、もらうときは getAttribute。
-	// statusがnullかどうかのチェックは、/をベタ打ちしたときにデフォルトの画面を表示するために必要。nullはDBにあるはずがないので、参照しても何も出てこない。
-	// typeはOpenかResolvedかしかないので/にすると、なにもないときで検索してしまう。
+
+	// ホーム一覧を表示する。URLパラメータは不正値でも落ちないようenumに変換する。
 	@GetMapping("/")
 	public String index(
-			@RequestParam(name = "status", required = false) HatenaStatus status,
+			@RequestParam(name = "status", required = false) String status,
 			@RequestParam(name = "q", required = false) String q,
 			@RequestParam(name = "type", required = false) String type,
+			@AuthenticationPrincipal UserDetails userDetails,
 			Model model) {
-		HatenaStatus effectiveStatus = (status == null) ? HatenaStatus.OPEN : status;
 
-		//isBlankは前後の空白を消してから、中身が空なのかチェックしてくれる。
-		//enumクラスのvalueOfメソッドを使うと、文字列をenum型に変換してくれる。
+		// statusが未入力・不正値の場合は、OPEN（未解決）一覧を表示する。
+		HatenaStatus effectiveStatus = HatenaStatus.OPEN;
+		if (status != null && !status.isBlank()) {
+			try {
+				effectiveStatus = HatenaStatus.valueOf(status.trim());
+			} catch (IllegalArgumentException ignored) {
+				effectiveStatus = HatenaStatus.OPEN;
+			}
+		}
+
+		// typeが未指定または不正値の場合は、種別で絞り込まない。
 		HatenaType effectiveType = null;
 		if (type != null && !type.isBlank()) {
 			try {
@@ -55,96 +82,154 @@ public class HatenaController {
 			}
 		}
 
-		List<Hatena> hatenaList = hatenaService.findForHome(effectiveStatus, effectiveType, q);
+		List<Hatena> hatenaList = hatenaService.findForHome(userDetails.getUsername(), effectiveStatus, effectiveType, q);
+		model.addAttribute("currentUsername", userDetails.getUsername());
 		model.addAttribute("hatenaList", hatenaList);
 		model.addAttribute("currentStatus", effectiveStatus);
 		model.addAttribute("q", q);
 		model.addAttribute("currentType", effectiveType);
-		// index.htmlに渡すという意味。
 		return "index";
 	}
 
-	// はてなの分類（5W1H）選択画面
+
+	// はてなの分類（5W1H）選択画面を表示する。
 	@GetMapping("/select-type")
 	public String selectType() {
 		return "select-type";
 	}
 
-	// type を受け取って「入力画面」を表示する（ちゃんとenumにないものがあれば、エラーを出してくれる）
-	// 自分で new Model() することは絶対にない.だから引数に入れている
-	// Formに入れて、Modelに詰めてreturmすることで、次の画面に渡している。
+
+	// 作成画面は種別選択後に表示するため、typeが不正な場合はホームへ戻す。
 	@GetMapping("/create")
-	public String create(@RequestParam("type") HatenaType type, Model model) {
+	public String create(
+			@RequestParam(name = "type", required = false) String type,
+			Model model,
+			RedirectAttributes redirectAttributes) {
+		if (type == null || type.isBlank()) {
+			redirectAttributes.addFlashAttribute("errorMessage", INVALID_TYPE_MESSAGE);
+			return "redirect:/";
+		}
+
+		HatenaType hatenaType;
+		try {
+			hatenaType = HatenaType.valueOf(type.trim());
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", INVALID_TYPE_MESSAGE);
+			return "redirect:/";
+		}
+
 		HatenaCreateForm form = new HatenaCreateForm();
-		form.setType(type);
+		form.setType(hatenaType);
 		model.addAttribute("form", form);
 		return "create";
 	}
 
-	// 引数の@Valid: メソッドが実行される直前に、Spring Bootが背後で「バリデーション・エンジン（検査員）」を呼び出す。
-	//        　　　 検査員は HatenaCreateForm の設計図を見て、@NotBlank や @Size のルールを一つずつチェックする。
-	// 引数のBindingResult:　引数に BindingResult が書いてあると、検査員は「エラーがあってもプログラムを止めずに、このノート（BindingResult）にメモして、そのままメソッドを動かしていいよ」という特別なモードに切り替わる。
-	//                      つまり、エラーの一覧を取得するために必要ということ。
-	// bindingResult.hasErrors(): 検査の結果、一つでもダメな項目があれば true になる
+	// 作成フォームの入力を検証し、問題なければログイン中ユーザーのはてなとして保存する。
 	@PostMapping("/save")
 	public String save(
-			@Valid HatenaCreateForm form,
+			@Valid @ModelAttribute("form") HatenaCreateForm form,
 			BindingResult bindingResult,
+			@AuthenticationPrincipal UserDetails userDetails,
 			Model model,
 			RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
-			model.addAttribute("form", form);
 			return "create";
 		}
-		hatenaService.saveNew(form.getType(), form.getContent());
-		redirectAttributes.addFlashAttribute("successMessage", "はてなを保存しました。");
+		try {
+			hatenaService.saveNew(form.getType(), form.getContent(), userDetails.getUsername());
+			redirectAttributes.addFlashAttribute("successMessage", SAVE_SUCCESS_MESSAGE);
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("errorMessage", SAVE_FAILED_MESSAGE);
+		}
 		return "redirect:/";
 	}
 
-	//　詳細画面（SCR-04）
-	//　詰め替えはserviceで行う。そのため、formを使って詰め替えを行う。
-	//　formは入力用。hatenaは出力用。
+
+	// 指定されたIDのはてなを取得し、詳細画面を表示する。
 	@GetMapping("/detail/{id}")
-	public String detail(@PathVariable("id") Long id, Model model) {
-		Hatena hatena = hatenaService.findById(id);
+	public String detail(
+			@PathVariable("id") String id,
+			@AuthenticationPrincipal UserDetails userDetails,
+			Model model,
+			RedirectAttributes redirectAttributes) {
+		Long parsedId;
+		try {
+			parsedId = Long.parseLong(id);
+		} catch (NumberFormatException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", INVALID_ID_MESSAGE);
+			return "redirect:/";
+		}
+
+		Hatena hatena;
+		try {
+			hatena = hatenaService.findById(parsedId, userDetails.getUsername());
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", NOT_FOUND_MESSAGE);
+			return "redirect:/";
+		}
+
+		// 画面表示用の Hatena と、更新フォーム用の form をそれぞれ渡す。
 		HatenaUpdateForm form = hatenaService.toUpdateForm(hatena);
 		model.addAttribute("form", form);
 		model.addAttribute("hatena", hatena);
 		return "detail";
 	}
 
-	/*更新するメソッド
-	  @Valid により、HatenaUpdateFormのフィールドについているバリデーション（例: @NotNull, @Size など）を使って入力チェックが走る。
-	  BindingResult bindingResult: @Validの検証結果（エラー情報）を受け取る入れ物。
-	                               BindingResult は、@Valid を付けた引数（この場合 form）の直後に置く必要がある。
-	  bindingResult: @Valid で検証した結果（どの項目がどんな理由でNGか）を持っているオブジェクト→必ず、Modelnに追加されて勝手にわたる。なので、書かなくてよい。
-	*/
+	// 更新フォームを検証し、問題なければログイン中ユーザーのはてなとして更新する。
 	@PostMapping("/update")
 	public String update(
-			@Valid HatenaUpdateForm form,
+			@Valid @ModelAttribute("form") HatenaUpdateForm form, 
 			BindingResult bindingResult,
+			@AuthenticationPrincipal UserDetails userDetails,
 			Model model,
 			RedirectAttributes redirectAttributes) {
-		Hatena hatena = hatenaService.findById(form.getId());
+		Hatena hatena;
+		try {
+			hatena = hatenaService.findById(form.getId(), userDetails.getUsername());
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", NOT_FOUND_MESSAGE);
+			return "redirect:/";
+		}
 
 		if (bindingResult.hasErrors()) {
-			model.addAttribute("form", form);
 			model.addAttribute("hatena", hatena);
 			return "detail";
 		}
 
-		//addFlashAttribute: そのあとに来る 1 回限りの GET にだけデータを載せるオプション。
-		hatenaService.update(form);
-		redirectAttributes.addFlashAttribute("successMessage", "はてなを更新しました。");
+		try {
+			// 更新可否の判断と保存はService側で行う。
+			hatenaService.update(form, userDetails.getUsername());
+			redirectAttributes.addFlashAttribute("successMessage", UPDATE_SUCCESS_MESSAGE);
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("errorMessage", UPDATE_FAILED_MESSAGE);
+		}
 		return "redirect:/";
 	}
 
 
-	//@RequestParam("id") Long id: hiddenで送られてきたものを引数の数字に入れている。
+	// 指定されたIDのはてなを削除する。
 	@PostMapping("/delete")
-	public String delete(@RequestParam("id") Long id, RedirectAttributes redirectAttributes) {
-		hatenaService.delete(id);
-		redirectAttributes.addFlashAttribute("successMessage", "はてなを削除しました。");
+	public String delete(
+			@RequestParam("id") String id,
+			@AuthenticationPrincipal UserDetails userDetails,
+			RedirectAttributes redirectAttributes) {
+		Long parsedId;
+		try {
+			parsedId = Long.parseLong(id);
+		} catch (NumberFormatException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", INVALID_ID_MESSAGE);
+			return "redirect:/";
+		}
+
+		try {
+			// 削除可否の判断はService側で行う。
+			hatenaService.delete(parsedId, userDetails.getUsername());
+			redirectAttributes.addFlashAttribute("successMessage", DELETE_SUCCESS_MESSAGE);
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", NOT_FOUND_MESSAGE);
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("errorMessage", DELETE_FAILED_MESSAGE);
+		}
 		return "redirect:/";
 	}
 }

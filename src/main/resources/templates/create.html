@@ -4,61 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title th:text="|入力画面 - Pikan（type=${form.type}）|">入力画面 - Pikan</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
 </head>
 <body>
   <main>
-    <!--
-    table:「ここから表を作るよ」という合図
-    width:　画面いっぱいに広げてという意味
-    tr: 「行（横の一列）」のこと。
-    td: 「列（マス目）」のこと。
-    small：　少し小さめに表示してくれる
-    -->
-    <!--
-    '文字' + ${変数}を省略して書くことができる
-    | | で囲むと、その中の文字と ${ } を勝手に合体させてくれる
-    -->
-    <table width="100%" border="0">
-      <tr>
-        <td>
-          <h1>Pikan</h1>
-        </td>
-        <td align="right">
-          <small th:text="|現在の type: ${form.type}|">現在の type: TYPE</small>
-        </td>
-      </tr>
-    </table>
+    <header class="page-header">
+      <h1 class="app-logo">
+        <a class="app-logo__link" th:href="@{/}">
+          <span class="app-logo__icon" aria-hidden="true">💡</span>
+          <span class="app-logo__text">Pikan</span>
+        </a>
+      </h1>
+      <p class="page-meta" th:text="|現在の type: ${form.type}|">現在の type: TYPE</p>
+    </header>
 
-    <h2 th:text="|入力画面（${form.type}）|">入力画面</h2>
+    <h2 class="page-title" th:text="|入力画面（${form.type}）|">入力画面</h2>
 
-    <!--
-    divとそんなに変わらないけど、死きりとしてsectionが入っています。
-    sevtionを使う時には下に見出しを作るのが基本らしい。-->
-    <!--Formクラスのものと連動させるために*{●●}と書いている。-->
-    <!--
-    #fields: 「入力フォームのチェック結果」が入っている特別なフォルダ。
-    .hasErrors('content'): 「content（本文）という項目に、何かエラー（未入力など）はありますか？」という意味
-    -->
-    <section>
+    <section class="content-section">
       <h3>内容を入力</h3>
-      <form th:action="@{/save}" th:object="${form}" method="post">
+      <form class="page-form" th:action="@{/save}" th:object="${form}" method="post">
+        <!--種別はURLから決定済みのためhiddenで送信する-->
         <input type="hidden" th:field="*{type}" />
-        <div>
-          <textarea th:field="*{content}" rows="6" cols="60" placeholder="ここに入力してください"></textarea>
-          <div th:if="${#fields.hasErrors('content')}">
+        <div class="form-field">
+          <label class="form-label" for="content">はてな（本文）</label>
+          <textarea
+            id="content"
+            class="form-textarea"
+            th:field="*{content}"
+            rows="6"
+            placeholder="ここに入力してください"
+          ></textarea>
+          <div class="form-error" th:if="${#fields.hasErrors('content')}">
             <small th:errors="*{content}">content error</small>
           </div>
         </div>
         <div>
-          <button type="submit">保存</button>
+          <button class="btn btn--primary" type="submit">保存</button>
         </div>
       </form>
     </section>
 
-    <div>
+    <div class="back-link">
       <a th:href="@{/}">ホームに戻る</a>
     </div>
   </main>
 </body>
 </html>
-

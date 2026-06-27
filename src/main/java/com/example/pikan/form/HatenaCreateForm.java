@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+// はてな新規作成フォームの入力値とバリデーション定義。
 @Data
 public class HatenaCreateForm {
 

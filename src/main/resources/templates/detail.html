@@ -4,27 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>詳細 - Pikan</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
 </head>
 <body>
   <main>
-    <header class="pageHeader">
-      <h1 class="pageTitle">Pikan</h1>
-      <span class="pageMeta" th:text="|type: ${hatena.type} / status: ${hatena.status}|">type: TYPE / status: STATUS</span>
+    <header class="page-header">
+      <h1 class="app-logo">
+        <a class="app-logo__link" th:href="@{/}">
+          <span class="app-logo__icon" aria-hidden="true">💡</span>
+          <span class="app-logo__text">Pikan</span>
+        </a>
+      </h1>
+      <p class="page-meta" th:text="|type: ${hatena.type} / status: ${hatena.status}|">type: TYPE / status: STATUS</p>
     </header>
 
-    <h2>詳細</h2>
+    <h2 class="page-title">詳細</h2>
 
-    <section>
+    <!--表示情報はhatena、更新送信はformを使う-->
+    <section class="content-section">
       <h3>内容の編集</h3>
-      <form th:action="@{/update}" th:object="${form}" method="post">
+      <form class="page-form" th:action="@{/update}" th:object="${form}" method="post">
         <input type="hidden" th:field="*{id}" />
 
-
-        <!--
-        <strong>: 「ここは重要な語だよ」という意味のタグ。多くのブラウザで太字っぽく表示されるけど、目的は 意味づけ（強調）。
-        <span>: 「文の一部分だけを囲うための箱」。それ自体は見た目を変えない（CSSを当てたり、th:text で差し替えたりするために使う）。
-          -->
-        <div class="hatenaMeta">
+        <div class="hatena-detail-meta">
           <div>
             <strong>状態:</strong>
             <span
@@ -33,71 +35,69 @@
           </div>
           <div>
             <strong>最終更新:</strong>
-            <span th:text="${hatena.updatedAt}">updatedAt</span>
+            <span th:text="${T(com.example.pikan.util.DateTimeFormats).format(hatena.updatedAt)}">updatedAt</span>
           </div>
+          <!--解決済みのときだけ解決日時を表示する-->
           <div th:if="${hatena.status == T(com.example.pikan.enumtype.HatenaStatus).RESOLVED}">
             <strong>解決日時:</strong>
-            <span th:text="${hatena.resolvedAt}">resolvedAt</span>
+            <span th:text="${T(com.example.pikan.util.DateTimeFormats).format(hatena.resolvedAt)}">resolvedAt</span>
           </div>
         </div>
 
 
-        <!--
-        #fields: 「入力フォームのチェック結果」が入っている特別なフォルダ。
-        .hasErrors('content'): 「content（本文）という項目に、何かエラー（未入力など）はありますか？」という意味
-        th:errors="*{content}": 「content（本文）という項目に、エラーがあれば表示してください」という意味
-        -->
-        <div>
-          <div>
-            <label>はてな（本文）</label>
-          </div>
-          <textarea th:field="*{content}" rows="6" cols="60" placeholder="ここに入力してください"></textarea>
-          <div th:if="${#fields.hasErrors('content')}">
+        <div class="form-field">
+          <label class="form-label" for="content">はてな（本文）</label>
+          <textarea
+            id="content"
+            class="form-textarea"
+            th:field="*{content}"
+            rows="6"
+            placeholder="ここに入力してください"
+          ></textarea>
+          <div class="form-error" th:if="${#fields.hasErrors('content')}">
             <small th:errors="*{content}">content error</small>
           </div>
         </div>
 
-        <div>
-          <div>
-            <label>回答</label>
-          </div>
-          <textarea th:field="*{answer}" rows="6" cols="60" placeholder="（任意）回答を入力してください"></textarea>
-          <div th:if="${#fields.hasErrors('answer')}">
+        <div class="form-field">
+          <label class="form-label" for="answer">回答</label>
+          <textarea
+            id="answer"
+            class="form-textarea"
+            th:field="*{answer}"
+            rows="6"
+            placeholder="（任意）回答を入力してください"
+          ></textarea>
+          <div class="form-error" th:if="${#fields.hasErrors('answer')}">
             <small th:errors="*{answer}">answer error</small>
           </div>
         </div>
 
-        <div>
-          <label>
+        <div class="form-field">
+          <label class="form-checkbox-label">
             <input type="checkbox" th:field="*{resolved}" />
             解決済み
           </label>
         </div>
 
         <div>
-          <button type="submit">更新</button>
+          <button class="btn btn--primary" type="submit">更新</button>
         </div>
       </form>
     </section>
 
     <hr />
 
-    <!--
-    confirm('...') は OKなら true、キャンセルなら false を返す
-    onsubmit="return ..." は、その戻り値が true なら送信（削除実行）、false なら 送信中止（削除しない）
-    -->
-    <section>
-      <h3>削除</h3>
+    <section class="content-section">
       <form th:action="@{/delete}" method="post" onsubmit="return confirm('このはてなを削除しますか？');">
         <input type="hidden" name="id" th:value="${hatena.id}" />
-        <button type="submit">削除</button>
+        <button class="btn btn--danger" type="submit">削除</button>
       </form>
     </section>
 
-    <div>
+    <div class="back-link">
       <a th:href="@{/}">ホームに戻る</a>
     </div>
   </main>
 </body>
 </html>
-

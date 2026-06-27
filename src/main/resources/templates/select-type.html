@@ -4,29 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>はてな分類選択 - Pikan</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
 </head>
 <body>
   <main>
-    <h1>Pikan</h1>
-    <h2>はてなの分類（5W1H）を選択</h2>
+    <header class="page-header">
+      <h1 class="app-logo">
+        <a class="app-logo__link" th:href="@{/}">
+          <span class="app-logo__icon" aria-hidden="true">💡</span>
+          <span class="app-logo__text">Pikan</span>
+        </a>
+      </h1>
+      <p class="page-meta">5W1H から選んで入力を始めます</p>
+    </header>
 
+    <h2 class="page-title">はてなの分類（5W1H）を選択</h2>
 
-    <!--@{・・・}：　後ろの（）を自動で？と＆を使った形にしてくれる。追加情報は？で追加される。/create?type=NORMAL
-    T( ) (型指定):「ただの文字列」ではなく、Javaの特定のクラス（Type）そのものを指したいときに使う
-          　　　　　型指定をしておくと、enumの中から指定の文字を取り出して使うことができる。-->
-    <div>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHY})}">WHY</a>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).HOW})}">HOW</a>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHAT})}">WHAT</a>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHEN})}">WHEN</a>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHICH})}">WHICH</a>
-      <a th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).NORMAL})}">NORMAL</a>
-    </div>
+    <section class="content-section">
+      <div class="post-actions type-grid">
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHAT})}">WHAT</a>
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHERE})}">WHERE</a>
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHO})}">WHO</a>
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHEN})}">WHEN</a>
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).WHY})}">WHY</a>
+        <a class="post-action" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).HOW})}">HOW</a>
+        <a class="post-action post-action--normal" th:href="@{/create(type=${T(com.example.pikan.enumtype.HatenaType).NORMAL})}">NORMAL</a>
+      </div>
+    </section>
 
-    <div>
+    <div class="back-link">
       <a th:href="@{/}">ホームに戻る</a>
     </div>
   </main>
 </body>
 </html>
-
