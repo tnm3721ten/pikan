@@ -15,7 +15,7 @@ public class RegisterForm {
 	private String username;
 
 	@NotBlank(message = "パスワードを入力してください", groups = RegisterFormGroups.Required.class)
-	@Size(min = 8, max = 100, message = "パスワードは8文字以上100文字以内で入力してください", groups = RegisterFormGroups.Length.class)
+	@Size(min = 8, max = 50, message = "パスワードは8文字以上50文字以内で入力してください", groups = RegisterFormGroups.Length.class)
 	@Pattern(regexp = "^[a-zA-Z0-9]+$", message = "半角英数字のみ使用できます", groups = RegisterFormGroups.Format.class)
 	private String password;
 }

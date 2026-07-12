@@ -1,7 +1,7 @@
 package com.example.pikan.form;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -12,7 +12,7 @@ public class HatenaUpdateForm {
 	@NotNull
 	private Long id;
 
-	@Pattern(regexp = "(?s).*\\S.*", message = "はてなを入力してください")
+	@NotBlank(message = "はてなを入力してください")
 	@Size(max = 1000, message = "1000文字以内で入力してください")
 	private String content;
 

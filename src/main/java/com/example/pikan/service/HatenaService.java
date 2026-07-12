@@ -70,10 +70,12 @@ public class HatenaService {
 		String answer = form.getAnswer();
 		hatena.setAnswer(answer == null || answer.isBlank() ? null : answer);
 
+		HatenaStatus previousStatus = hatena.getStatus();
 		if (form.isResolved()) {
 			hatena.setStatus(HatenaStatus.RESOLVED);
-			hatena.setResolvedAt(now);
-
+			if (previousStatus != HatenaStatus.RESOLVED) {
+				hatena.setResolvedAt(now);
+			}
 		} else {
 			hatena.setStatus(HatenaStatus.OPEN);
 			hatena.setResolvedAt(null);

@@ -17,25 +17,33 @@ public class RegisterFormValidator {
 		this.validator = validator;
 	}
 
-	// Required → Length → Format の順で検証し、先に失敗した段階だけエラーを返す。
 	public void validate(RegisterForm form, BindingResult bindingResult) {
-		if (validateGroup(form, bindingResult, RegisterFormGroups.Required.class)) {
-			return;
-		}
-		if (validateGroup(form, bindingResult, RegisterFormGroups.Length.class)) {
-			return;
-		}
-		validateGroup(form, bindingResult, RegisterFormGroups.Format.class);
+		validateField(form, bindingResult, "username");
+		validateField(form, bindingResult, "password");
 	}
 
-	private boolean validateGroup(RegisterForm form, BindingResult bindingResult, Class<?> group) {
-		Set<ConstraintViolation<RegisterForm>> violations = validator.validate(form, group);
+	private void validateField(RegisterForm form, BindingResult bindingResult, String fieldName) {
+		if (validateProperty(form, bindingResult, fieldName, RegisterFormGroups.Required.class)) {
+			return;
+		}
+		if (validateProperty(form, bindingResult, fieldName, RegisterFormGroups.Length.class)) {
+			return;
+		}
+		validateProperty(form, bindingResult, fieldName, RegisterFormGroups.Format.class);
+	}
+
+	private boolean validateProperty(
+			RegisterForm form,
+			BindingResult bindingResult,
+			String fieldName,
+			Class<?> group) {
+		Set<ConstraintViolation<RegisterForm>> violations = validator.validateProperty(form, fieldName, group);
 		for (ConstraintViolation<RegisterForm> violation : violations) {
 			bindingResult.rejectValue(
-					violation.getPropertyPath().toString(),
+					fieldName,
 					violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
 					violation.getMessage());
 		}
-		return bindingResult.hasErrors();
+		return !violations.isEmpty();
 	}
 }

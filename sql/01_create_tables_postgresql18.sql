@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS hatena (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   --20文字と制限することで、DBは「この項目はこれくらいの容量を確保すればいいな」と予測できる。
   --CHECK句は、リストにある言葉以外だめというルール。ＤＢを守るための念押し「CHECK (type IN (...))」
-  type VARCHAR(20) NOT NULL CHECK (type IN ('WHY', 'HOW', 'WHAT', 'WHEN', 'WHICH', 'NORMAL')),
+  type VARCHAR(20) NOT NULL CHECK (type IN ('WHAT', 'WHERE', 'WHO', 'WHEN', 'WHY', 'HOW', 'NORMAL')),
   --長さが予測できないのでTEXTを使用。
   content TEXT NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'RESOLVED')),
@@ -30,6 +30,3 @@ CREATE INDEX IF NOT EXISTS idx_hatena_status ON hatena(status);
 CREATE INDEX IF NOT EXISTS idx_hatena_type ON hatena(type);
 CREATE INDEX IF NOT EXISTS idx_hatena_created_at ON hatena(created_at);
 
-
---★基礎知識
---status (名前) → VARCHAR(20) (型) → NOT NULL (制約A) → DEFAULT 'OPEN' (制約B)

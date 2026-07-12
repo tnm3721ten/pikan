@@ -33,7 +33,7 @@
         <div class="form-field">
           <div class="form-label-row">
             <label class="form-label" for="password">パスワード</label>
-            <span class="form-hint">半角英数字のみ・8文字以上100文字以内</span>
+            <span class="form-hint">半角英数字のみ・8文字以上50文字以内</span>
           </div>
           <input id="password" class="form-input" type="password" th:field="*{password}" autocomplete="new-password" />
           <div class="form-error" th:if="${#fields.hasErrors('password')}">
