@@ -1,6 +1,5 @@
 HELP.md
 target/
-src/test/
 
 ### Local config (secrets) ###
 src/main/resources/application-local.properties

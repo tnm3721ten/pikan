@@ -155,11 +155,13 @@ Pikanは、学習や業務の中で生まれた疑問を記録し、未解決・
 
 `sql/` 配下の SQL を手動で実行してください（`spring.sql.init.mode=never` のため、アプリ起動時には実行されません）。
 
-| ファイル | 内容 |
-| --- | --- |
-| `sql/01_create_tables_postgresql18.sql` | `hatena` テーブル作成 |
-| `sql/02_add_users_and_user_id.sql` | `users` テーブル作成、`hatena.user_id` 追加 |
-| `sql/03_verify_users_and_hatena.sql` | 確認用 |
+詳細は [sql/README.md](sql/README.md) を参照してください。
+
+**新規環境の最短手順:**
+
+1. データベース `pikan` を作成する
+2. `sql/setup_fresh.sql` を実行する
+3. 必要に応じて `sql/verify_schema.sql` で構造を確認する
 
 ### DB 接続設定
 
@@ -209,10 +211,10 @@ spring.datasource.password=your_password_here
 pikan/
 ├── mvnw / mvnw.cmd          # Maven Wrapper
 ├── pom.xml                  # 依存関係・ビルド設定
-├── sql/                     # DB 初期化・マイグレーション SQL
-│   ├── 01_create_tables_postgresql18.sql
-│   ├── 02_add_users_and_user_id.sql
-│   └── 03_verify_users_and_hatena.sql
+├── sql/                     # DB セットアップ SQL
+│   ├── README.md
+│   ├── setup_fresh.sql
+│   └── verify_schema.sql
 └── src/
     ├── main/
     │   ├── java/com/example/pikan/
