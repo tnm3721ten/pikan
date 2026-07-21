@@ -1,4 +1,4 @@
 # このファイルを application-local.properties にコピーし、値を設定してください。
 # application-local.properties は Git 管理外です。
 
-spring.datasource.password=your_password_here
+spring.datasource.password=YOUR_LOCAL_DB_PASSWORD

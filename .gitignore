@@ -2,7 +2,7 @@ HELP.md
 target/
 
 ### Local config (secrets) ###
-src/main/resources/application-local.properties
+config/application-local.properties
 
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

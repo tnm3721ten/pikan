@@ -166,31 +166,33 @@ Pikanは、学習や業務の中で生まれた疑問を記録し、未解決・
 ### DB 接続設定
 
 DB接続の共通設定は `src/main/resources/application.properties` にあります。
-DBパスワードなど、環境ごとの設定は Git 管理外の `application-local.properties` に書きます。
+DBパスワードなど、環境ごとの設定は Git 管理外の `config/application-local.properties` に書きます。
 
 初回のみ、以下を実行してください。
 
 ```bash
 # Windows
-copy src\main\resources\application-local.properties.example src\main\resources\application-local.properties
+copy config\application-local.properties.example config\application-local.properties
 
 # Linux / macOS
-cp src/main/resources/application-local.properties.example src/main/resources/application-local.properties
+cp config/application-local.properties.example config/application-local.properties
 ```
 
-コピー後、`application-local.properties` を開き、PostgreSQL のパスワードを設定してください。
+コピー後、`config/application-local.properties` を開き、PostgreSQL のパスワードを設定してください。
 
 ```properties
-spring.datasource.password=your_password_here
+spring.datasource.password=YOUR_LOCAL_DB_PASSWORD
 ```
 
 | ファイル | 役割 | Git管理 |
 | --- | --- | --- |
-| `application.properties` | 共通設定 | する |
-| `application-local.properties.example` | 設定例 | する |
-| `application-local.properties` | ローカル用（パスワード等） | しない |
+| `src/main/resources/application.properties` | 共通設定 | する |
+| `config/application-local.properties.example` | 設定例 | する |
+| `config/application-local.properties` | ローカル用（パスワード等） | しない |
 
 ### アプリケーション起動
+
+`application.properties` で `local` プロファイルが有効になるため、次のコマンドで起動できます。
 
 ```bash
 # Windows
@@ -209,6 +211,9 @@ spring.datasource.password=your_password_here
 
 ```
 pikan/
+├── config/                  # ローカル専用設定（example のみ Git 管理）
+│   ├── application-local.properties.example
+│   └── application-local.properties  # Git 管理外
 ├── mvnw / mvnw.cmd          # Maven Wrapper
 ├── pom.xml                  # 依存関係・ビルド設定
 ├── sql/                     # DB セットアップ SQL
@@ -247,7 +252,6 @@ pikan/
     │   │       └── DateTimeFormats.java
     │   └── resources/
     │       ├── application.properties
-    │       ├── application-local.properties.example
     │       ├── static/css/app.css
     │       └── templates/                  # Thymeleaf テンプレート
     │           ├── index.html
