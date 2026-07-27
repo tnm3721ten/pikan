@@ -4,6 +4,9 @@ target/
 ### Local config (secrets) ###
 config/application-local.properties
 
+### Private docs (not for Git) ###
+docs/private/
+
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -35,3 +38,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Cursor (local AI rules) ###
+.cursor/
