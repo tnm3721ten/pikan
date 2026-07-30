@@ -17,6 +17,8 @@ import com.example.pikan.form.RegisterFormValidator;
 import com.example.pikan.repository.UserRepository;
 import com.example.pikan.service.RegisterService;
 
+//Controller テスト用の Web 層だけ の Spring 箱を起動する。
+//AuthController だけを 本物の Bean として Spring に載せる。
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
 class AuthControllerTest {
@@ -24,6 +26,7 @@ class AuthControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
+	//RegisterService 等の 偽物を Spring の Bean として登録する。
 	@MockitoBean
 	private RegisterService registerService;
 
@@ -36,6 +39,7 @@ class AuthControllerTest {
 	@Test
 	void registerForm_returnsRegisterView() throws Exception {
 		mockMvc.perform(get("/register"))
+			//HTTP レスポンス（ステータス、View 名、Model）を assert。リクエストなので、assertThatじゃなくて、andExpect。
 				.andExpect(status().isOk())
 				.andExpect(view().name("register"))
 				.andExpect(model().attributeExists("form"));
