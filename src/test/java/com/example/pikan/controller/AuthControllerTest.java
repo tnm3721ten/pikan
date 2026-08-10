@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BindingResult;
 
 import com.example.pikan.config.SecurityConfig;
+import com.example.pikan.entity.User;
 import com.example.pikan.form.RegisterForm;
 import com.example.pikan.form.RegisterFormValidator;
 import com.example.pikan.repository.UserRepository;
@@ -74,10 +75,11 @@ class AuthControllerTest {
 		verify(registerService).register(any(RegisterForm.class));
 	}
 
+	//空のユーザー名を入力した時に
 	@Test
 	void registerSubmit_validationError_returnsRegisterView() throws Exception {
 		// 本物の Validator は使わず、モックが BindingResult にエラーを入れる。
-		//「偽物の validate が呼ばれたら、代わりにこの処理をやれ」と登録する
+		//「偽物の validate が呼ばれたら、代わりにこの処理をやれ」と登録する→普段と逆の表記
 		doAnswer(invocation -> {
 			BindingResult bindingResult = invocation.getArgument(1);
 			bindingResult.rejectValue("username", "NotBlank", "ユーザー名を入力してください");
@@ -92,7 +94,27 @@ class AuthControllerTest {
 				.andExpect(view().name("register"));
 
 		// 入力エラーなら重複確認・登録に進まない
+		// verify(確認対象のモック, never()).呼ばれていないはずのメソッド(引数条件);
 		verify(userRepository, never()).findByUsername(any());
+		verify(registerService, never()).register(any(RegisterForm.class));
+	}
+
+	//ユーザー名が重複した際のテスト→エラー予定
+	@Test
+	void registerSubmit_duplicateUsername_returnsRegisterView() throws Exception {
+		User existingUser = new User();
+		existingUser.setUsername("newuser");
+		// 既存ユーザーあり → isPresent() が true
+		when(userRepository.findByUsername("newuser")).thenReturn(Optional.of(existingUser));
+
+		mockMvc.perform(post("/register")
+						.with(csrf())
+						.param("username", "newuser")
+						.param("password", "password1"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("register"))
+				.andExpect(model().attributeHasFieldErrorCode("form", "username", "duplicate"));
+
 		verify(registerService, never()).register(any(RegisterForm.class));
 	}
 }
