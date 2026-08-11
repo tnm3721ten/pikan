@@ -75,7 +75,7 @@ class AuthControllerTest {
 		verify(registerService).register(any(RegisterForm.class));
 	}
 
-	//空のユーザー名を入力した時に
+	//空のユーザー名を入力した時に登録画面に遷移し、重複確認と登録の処理を行わない
 	@Test
 	void registerSubmit_validationError_returnsRegisterView() throws Exception {
 		// 本物の Validator は使わず、モックが BindingResult にエラーを入れる。
@@ -99,7 +99,7 @@ class AuthControllerTest {
 		verify(registerService, never()).register(any(RegisterForm.class));
 	}
 
-	//ユーザー名が重複した際のテスト→エラー予定
+	//ユーザー名が重複した際、登録画面に遷移し、エラーを表示。登録処理を行わない
 	@Test
 	void registerSubmit_duplicateUsername_returnsRegisterView() throws Exception {
 		User existingUser = new User();
@@ -113,6 +113,7 @@ class AuthControllerTest {
 						.param("password", "password1"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("register"))
+				//.andExpect(model().attributeHasFieldErrorCode(モデル名, フィールド名, エラーコード))
 				.andExpect(model().attributeHasFieldErrorCode("form", "username", "duplicate"));
 
 		verify(registerService, never()).register(any(RegisterForm.class));
