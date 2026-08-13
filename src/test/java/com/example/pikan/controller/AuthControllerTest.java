@@ -67,6 +67,7 @@ class AuthControllerTest {
 		// RegisterFormValidator はモックのため validate は何もしない → BindingResult は空のまま。
 		mockMvc.perform(post("/register")
 						.with(csrf())
+						//FORMはじどうでspring作成される
 						.param("username", "newuser")
 						.param("password", "password1"))
 				.andExpect(status().is3xxRedirection())
