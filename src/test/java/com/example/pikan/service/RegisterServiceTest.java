@@ -16,18 +16,18 @@ import com.example.pikan.entity.User;
 import com.example.pikan.form.RegisterForm;
 import com.example.pikan.repository.UserRepository;
 
-//このクラス内の @Test が Mockito 対応になる
+/**
+ * 登録時にパスワードをエンコードしてUserをsaveすることを、DBなしで確認する。
+ */
 @ExtendWith(MockitoExtension.class)
 class RegisterServiceTest {
 
-	//UserRepository や PasswordEncoder の 偽物 を Mockito が作る。
 	@Mock
 	private UserRepository userRepository;
 
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
-	//RegisterService を作り、コンストラクタに @Mock を渡す。
 	@InjectMocks
 	private RegisterService registerService;
 
@@ -41,14 +41,12 @@ class RegisterServiceTest {
 
 		registerService.register(form);
 
-		//モックに「このメソッドが呼ばれたか」を確認させる。
 		verify(passwordEncoder).encode("password123");
 
 		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(userCaptor.capture());
 
 		User savedUser = userCaptor.getValue();
-		//Java オブジェクト（User）の フィールド値 を assert。
 		assertThat(savedUser.getUsername()).isEqualTo("testuser");
 		assertThat(savedUser.getPassword()).isEqualTo("encoded-password");
 		assertThat(savedUser.getCreatedAt()).isNotNull();

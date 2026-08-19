@@ -12,9 +12,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.example.pikan.entity.User;
 
-//UserRepository（本物）、User Entity と JPA、H2（組み込み DB）を起動する。小さな箱に入れる。
+/**
+ * H2 上で save と findByUsername を確認する。PostgreSQL は使わない。
+ */
 @DataJpaTest
-//application-{プロファイル名}.propertiesのプロファイル名がtestとかいてあれば、そのファイルが読まれる。
 @ActiveProfiles("test")
 class UserRepositoryTest {
 

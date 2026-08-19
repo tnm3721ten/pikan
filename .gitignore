@@ -7,6 +7,9 @@ config/application-local.properties
 ### Private docs (not for Git) ###
 docs/private/
 
+### Local learning notes next to tests (not for Git) ###
+**/*.notes.md
+
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

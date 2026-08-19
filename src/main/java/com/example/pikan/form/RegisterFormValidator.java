@@ -37,8 +37,10 @@ public class RegisterFormValidator {
 			BindingResult bindingResult,
 			String fieldName,
 			Class<?> group) {
+		//バリデーションを実行し、エラーを取得する
 		Set<ConstraintViolation<RegisterForm>> violations = validator.validateProperty(form, fieldName, group);
 		for (ConstraintViolation<RegisterForm> violation : violations) {
+			//エラーをBindingResultに追加する
 			bindingResult.rejectValue(
 					fieldName,
 					violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(),
