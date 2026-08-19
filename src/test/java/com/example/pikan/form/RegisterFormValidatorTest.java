@@ -11,33 +11,26 @@ import org.springframework.validation.FieldError;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 
+/**
+ * RegisterFormの入力ルールと、RequiredがLength/Formatより先にreturnすることを確認する。
+ * Springを起動せず、本物のJakartaValidatorを手で渡す。
+ */
 class RegisterFormValidatorTest {
 
-	//宣言しただけではインスタンスは作られないので、@BeforeEachでインスタンスを作る
 	private RegisterFormValidator registerFormValidator;
 
-	// 本番と同じく、本物の Jakarta Validator を使う（モックしない）
-	//@Testの直前に、毎回このメソッドを実行する
 	@BeforeEach
 	void setUp() {
-		
-		//Validator「アノテーションを見て、OK / NG を判定する検査役」 のクラス（インターフェース）。
-		//validation その検査役（Validator）を手に入れるための入口クラス。
-		//buildDefaultValidatorFactory() Validator を作るための 工場オブジェクト を返す
-		//getValidator() 工場オブジェクト から Validator を作る
 		Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 		registerFormValidator = new RegisterFormValidator(validator);
 	}
 
 	@Test
 	void username_blank_hasRequiredError() {
-		//username を 空文字、password は有効値にしたフォームを作る
 		RegisterForm form = formWithUsername("");
-		//今作ったこの form（RegisterForm の1個）専用の、エラーを入れる箱を作った。ちなみに名前は「form」。
-		//いつもはspringが自動で作ってくれるが、ここでは自分で作る。
+		// Web では Spring が作るエラー箱を、単体テストでは自分で用意する。
 		BindingResult bindingResult = new BeanPropertyBindingResult(form, "form");
 
-		//Formのなかをチェックしてエラーを入れる
 		registerFormValidator.validate(form, bindingResult);
 
 		assertThat(usernameErrorMessage(bindingResult)).isEqualTo("ユーザー名を入力してください");
@@ -164,7 +157,7 @@ class RegisterFormValidatorTest {
 
 		registerFormValidator.validate(form, bindingResult);
 
-		// Required で return するため、Length / Format は付かない
+		// Requiredでreturnするため、Length/Formatは付かない
 		assertThat(bindingResult.getFieldErrors("username")).hasSize(1);
 		assertThat(usernameErrorMessage(bindingResult)).isEqualTo("ユーザー名を入力してください");
 	}
@@ -180,7 +173,7 @@ class RegisterFormValidatorTest {
 		assertThat(passwordErrorMessage(bindingResult)).isEqualTo("パスワードを入力してください");
 	}
 
-	/** ユーザー名だけ変え、パスワードは常に有効値にする（ユーザー名のエラーだけ見やすくするため） */
+	//ユーザー名だけ変え、パスワードは常に有効値にする（ユーザー名のエラーだけ見やすくするため）
 	private RegisterForm formWithUsername(String username) {
 		RegisterForm form = new RegisterForm();
 		form.setUsername(username);
@@ -188,7 +181,7 @@ class RegisterFormValidatorTest {
 		return form;
 	}
 
-	/** パスワードだけ変え、ユーザー名は常に有効値にする */
+	//パスワードだけ変え、ユーザー名は常に有効値にする
 	private RegisterForm formWithPassword(String password) {
 		RegisterForm form = new RegisterForm();
 		form.setUsername("validuser");
@@ -197,9 +190,7 @@ class RegisterFormValidatorTest {
 	}
 
 	private String usernameErrorMessage(BindingResult bindingResult) {
-		//FieldError BindingResult の中に入っている 「1フィールド分のエラー」 を表す型
 		FieldError error = bindingResult.getFieldError("username");
-		//エラーが無いと null を返すので、assertThatでチェックする
 		assertThat(error).isNotNull();
 		return error.getDefaultMessage();
 	}

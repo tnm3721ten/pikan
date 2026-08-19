@@ -26,7 +26,7 @@ import com.example.pikan.form.RegisterFormValidator;
 import com.example.pikan.repository.UserRepository;
 import com.example.pikan.service.RegisterService;
 
-/**
+/*
  * フォームログイン（POST /login）の成功・失敗を確認する。
  * DB は使わず、テスト用の InMemoryUserDetailsManager を使う。
  */
@@ -37,6 +37,7 @@ class FormLoginTest {
 	@Autowired
 	private MockMvc mockMvc;
 
+	// AuthController の依存。このテストでは呼ばないのでモックで箱を満たす。
 	@MockitoBean
 	private RegisterService registerService;
 
@@ -49,14 +50,7 @@ class FormLoginTest {
 	@TestConfiguration
 	static class TestUserConfig {
 
-		//UserDetails：1人分の名簿カード
-		//UserDetailsService：名前からカードを探してくれる名簿係。名簿係のインターフェースを実装したクラス。
-		//InMemoryUserDetailsManager：カードをメモリ上に保管している具体的な名簿係。
-
-		//ここで登録済みのユーザー情報を１件作る。
-		//帰ってきたオブジェクトを使える状態で保管する
 		@Bean
-		//同じ種類のオブジェクトが複数登録されていたら、こちらを優先して使う
 		@Primary
 		UserDetailsService testUserDetailsService(PasswordEncoder passwordEncoder) {
 			UserDetails user = User.withUsername("testuser")
@@ -67,7 +61,6 @@ class FormLoginTest {
 		}
 	}
 
-	//ログイン成功時のリダイレクトURL確認
 	@Test
 	void login_withValidCredentials_redirectsToHome() throws Exception {
 		mockMvc.perform(post("/login")
@@ -78,10 +71,9 @@ class FormLoginTest {
 				.andExpect(redirectedUrl("/"));
 	}
 
-	//ログイン失敗時のリダイレクトURL確認
 	@Test
 	void login_withInvalidCredentials_redirectsToLoginError() throws Exception {
-		// failureHandler は username 付きで /login?error&username=... へ送る
+		// 失敗時は failureHandler が /login?error&username=... へ送る
 		mockMvc.perform(post("/login")
 						.with(csrf())
 						.param("username", "testuser")

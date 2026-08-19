@@ -18,9 +18,9 @@ import com.example.pikan.form.RegisterFormValidator;
 import com.example.pikan.repository.UserRepository;
 import com.example.pikan.service.RegisterService;
 
-/**
+/*
  * 未認証アクセスで、公開URLと保護URLの違いを確認する。
- * （@WithMockUser なし = 未ログイン）
+ * @WithMockUserなし = 未ログイン。
  */
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
@@ -54,7 +54,7 @@ class SecurityAccessTest {
 
 	@Test
 	void home_redirectsToLoginRequiredWithoutAuthentication() throws Exception {
-		// "/" は anyRequest().authenticated()。未ログインなら EntryPoint で /login?required
+		// "/"はanyRequest().authenticated()。未ログインならEntryPointで/login?required
 		mockMvc.perform(get("/"))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/login?required"));

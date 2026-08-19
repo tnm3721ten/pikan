@@ -38,7 +38,7 @@ class LogoutTest {
 	@MockitoBean
 	private RegisterFormValidator registerFormValidator;
 
-	//CSRF付きでログアウトしたときのリダイレクトURL確認
+	// ログアウトはパスワード照合しないので、@WithMockUser でログイン済みにする
 	@Test
 	@WithMockUser
 	void logout_withCsrf_redirectsToLogin() throws Exception {
@@ -48,7 +48,6 @@ class LogoutTest {
 				.andExpect(redirectedUrl("/login"));
 	}
 
-	//CSRFなしでログアウトしたときのステータス確認
 	@Test
 	@WithMockUser
 	void logout_withoutCsrf_returnsForbidden() throws Exception {
