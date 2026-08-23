@@ -128,6 +128,22 @@ class HatenaServiceTest {
 		assertThat(capturedSave().getAnswer()).isNull();
 	}
 
+	@Test
+	void update_transitionsOpenToResolvedAndSetsResolvedAt() {
+		User owner = owner();
+		Hatena hatena = existingHatena(owner);
+		LocalDateTime previousUpdatedAt = hatena.getUpdatedAt();
+		stubFindOwnedHatena(owner, hatena);
+
+		hatenaService.update(updateForm("新しい本文", "新しい回答", true), "testuser");
+
+		Hatena saved = capturedSave();
+		assertThat(saved.getStatus()).isEqualTo(HatenaStatus.RESOLVED);
+		assertThat(saved.getResolvedAt()).isNotNull();
+		assertThat(saved.getUpdatedAt()).isAfter(previousUpdatedAt);
+		assertThat(saved.getResolvedAt()).isEqualTo(saved.getUpdatedAt());
+	}
+
 	private User owner() {
 		User owner = new User();
 		owner.setUsername("testuser");
@@ -151,11 +167,15 @@ class HatenaServiceTest {
 	}
 
 	private HatenaUpdateForm updateForm(String content, String answer) {
+		return updateForm(content, answer, false);
+	}
+
+	private HatenaUpdateForm updateForm(String content, String answer, boolean resolved) {
 		HatenaUpdateForm form = new HatenaUpdateForm();
 		form.setId(1L);
 		form.setContent(content);
 		form.setAnswer(answer);
-		form.setResolved(false);
+		form.setResolved(resolved);
 		return form;
 	}
 
