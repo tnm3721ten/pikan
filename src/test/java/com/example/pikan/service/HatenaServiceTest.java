@@ -2,6 +2,8 @@ package com.example.pikan.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +22,7 @@ import com.example.pikan.entity.User;
 import com.example.pikan.enumtype.HatenaStatus;
 import com.example.pikan.enumtype.HatenaType;
 import com.example.pikan.form.HatenaUpdateForm;
+
 import com.example.pikan.repository.HatenaRepository;
 import com.example.pikan.repository.UserRepository;
 
@@ -142,6 +145,45 @@ class HatenaServiceTest {
 		assertThat(saved.getResolvedAt()).isNotNull();
 		assertThat(saved.getUpdatedAt()).isAfter(previousUpdatedAt);
 		assertThat(saved.getResolvedAt()).isEqualTo(saved.getUpdatedAt());
+	}
+
+	@Test
+	void update_transitionsResolvedToOpenAndClearsResolvedAt() {
+		User owner = owner();
+		Hatena hatena = existingHatena(owner);
+		hatena.setStatus(HatenaStatus.RESOLVED);
+		hatena.setResolvedAt(LocalDateTime.of(2026, 1, 1, 12, 0));
+		stubFindOwnedHatena(owner, hatena);
+
+		hatenaService.update(updateForm("新しい本文", "新しい回答"), "testuser");
+
+		Hatena saved = capturedSave();
+		assertThat(saved.getStatus()).isEqualTo(HatenaStatus.OPEN);
+		assertThat(saved.getResolvedAt()).isNull();
+	}
+
+	@Test
+	void delete_deletesWhenOwnerMatches() {
+		User owner = owner();
+		Hatena hatena = existingHatena(owner);
+		stubFindOwnedHatena(owner, hatena);
+
+		hatenaService.delete(1L, "testuser");
+
+		verify(hatenaRepository).delete(hatena);
+	}
+
+	@Test
+	void delete_doesNotDeleteWhenNotFoundForCurrentUser() {
+		User owner = owner();
+		when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(owner));
+		when(hatenaRepository.findByIdAndUser(2L, owner)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> hatenaService.delete(2L, "testuser"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("2");
+
+		verify(hatenaRepository, never()).delete(any());
 	}
 
 	private User owner() {
